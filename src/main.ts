@@ -1,7 +1,4 @@
-import {
-  Firebot,
-  ScriptReturnObject,
-} from "@crowbartools/firebot-custom-scripts-types";
+import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
 import axios from "axios";
 
 async function handleGoogle(
@@ -12,7 +9,7 @@ async function handleGoogle(
   target: string,
 ) {
   let requestObject = null;
-  let detect: boolean = null;
+  let detect: boolean;
   switch (action) {
     case "detect":
       requestObject = {
@@ -74,7 +71,7 @@ async function handleDeepL(
   target: string,
 ) {
   let requestObject = null;
-  let detect: boolean = null;
+  let detect: boolean;
   switch (action) {
     case "detect":
       return "Detecting a language by itself is not supported by the DeepL API";
@@ -135,7 +132,7 @@ async function handleLibreTranslate(
   target: string,
 ) {
   let requestObject = null;
-  let detect: boolean = null;
+  let detect: boolean;
   switch (action) {
     case "detect":
       requestObject = {
@@ -148,18 +145,19 @@ async function handleLibreTranslate(
       detect = true;
       break;
     case "translate":
+      let detectedLanguage: string = await handleLibreTranslate(
+        logger,
+        apiKey,
+        "detect",
+        text,
+        target,
+      );
       requestObject = {
         method: "POST",
         url: "https://libretranslate.de/translate",
         data: `q=${encodeURIComponent(
           text,
-        )}&source=${await handleLibreTranslate(
-          logger,
-          apiKey,
-          "detect",
-          text,
-          target,
-        )}&target=${encodeURIComponent(
+        )}&source=${detectedLanguage}&target=${encodeURIComponent(
           target,
         )}&format=text&key=${encodeURIComponent(apiKey)}`,
       };
