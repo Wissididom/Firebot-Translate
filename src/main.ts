@@ -127,6 +127,79 @@ async function handleDeepL(
     });
 }
 
+async function handleLibreTranslate(
+  logger: any,
+  apiKey: string,
+  action: string,
+  text: string,
+  target: string,
+) {
+  let requestObject = null;
+  let detect: boolean = null;
+  switch (action) {
+    case "detect":
+      requestObject = {
+        method: "POST",
+        url: "https://libretranslate.de/detect",
+        data: `q=${encodeURIComponent(text)}&api_key=${encodeURIComponent(
+          apiKey,
+        )}`,
+      };
+      detect = true;
+      break;
+    case "translate":
+      requestObject = {
+        method: "POST",
+        url: "https://libretranslate.de/translate",
+        data: `q=${encodeURIComponent(
+          text,
+        )}&source=${await handleLibreTranslate(
+          logger,
+          apiKey,
+          "detect",
+          text,
+          target,
+        )}&target=${encodeURIComponent(
+          target,
+        )}&format=text&key=${encodeURIComponent(apiKey)}`,
+      };
+      detect = false;
+      break;
+  }
+  if (!requestObject) return null;
+  return await axios(requestObject)
+    .then(async (res) => {
+      if (res.status == 200) {
+        if (detect) {
+          return res.data[0].language;
+        } else {
+          return res.data.translatedText;
+        }
+      } else {
+        logger.info(JSON.stringify(res.data)); // Actually json but logger.info only accepts strings
+        return null;
+      }
+    })
+    .catch((err) => {
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        logger.error(err.response.data);
+        logger.error(err.response.status);
+        logger.error(err.response.headers);
+      } else if (err.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        logger.error(err.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        logger.error("Error", err.message);
+      }
+      return null;
+    });
+}
+
 interface Params {
   api_key: string;
   provider: [];
@@ -161,7 +234,7 @@ const script: Firebot.CustomScript<Params> = {
         description: "Provider",
         secondaryDescription:
           "The provider used for the translation or detection",
-        options: ["Google", "DeepL"],
+        options: ["Google", "DeepL", "LibreTranslate"],
       },
       action: {
         type: "enum",
@@ -216,6 +289,15 @@ const script: Firebot.CustomScript<Params> = {
         break;
       case "DeepL":
         response = await handleDeepL(
+          logger,
+          apiKey,
+          action as unknown as string,
+          text,
+          target,
+        );
+        break;
+      case "LibreTranslate":
+        response = await handleLibreTranslate(
           logger,
           apiKey,
           action as unknown as string,
