@@ -278,22 +278,10 @@ const script: Firebot.CustomScript<Params> = {
     let response: string = null;
     switch (provider as unknown) {
       case "Google":
-        response = await handleGoogle(
-          logger,
-          apiKey,
-          action,
-          text,
-          target,
-        );
+        response = await handleGoogle(logger, apiKey, action, text, target);
         break;
       case "DeepL":
-        response = await handleDeepL(
-          logger,
-          apiKey,
-          action,
-          text,
-          target,
-        );
+        response = await handleDeepL(logger, apiKey, action, text, target);
         break;
       case "LibreTranslate":
         response = await handleLibreTranslate(
