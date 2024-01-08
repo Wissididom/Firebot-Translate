@@ -1,10 +1,11 @@
 import { Firebot } from "@crowbartools/firebot-custom-scripts-types";
+import { Logger } from "@crowbartools/firebot-custom-scripts-types/types/modules/logger";
 import axios from "axios";
 
 async function handleGoogle(
-  logger: any,
+  logger: Logger,
   apiKey: string,
-  action: string,
+  action: "detect" | "translate",
   text: string,
   target: string,
 ) {
@@ -64,9 +65,9 @@ async function handleGoogle(
     });
 }
 async function handleDeepL(
-  logger: any,
+  logger: Logger,
   apiKey: string,
-  action: string,
+  action: "detect" | "translate",
   text: string,
   target: string,
 ) {
@@ -125,9 +126,9 @@ async function handleDeepL(
 }
 
 async function handleLibreTranslate(
-  logger: any,
+  logger: Logger,
   apiKey: string,
-  action: string,
+  action: "detect" | "translate",
   text: string,
   target: string,
 ) {
@@ -200,11 +201,11 @@ async function handleLibreTranslate(
 
 interface Params {
   api_key: string;
-  provider: [];
-  action: [];
+  provider: ("Google" | "DeepL" | "LibreTranslate")[];
+  action: ("detect" | "translate")[];
   text: string;
   target: string;
-  sendAs: [];
+  sendAs: ("streamer" | "bot")[];
 }
 
 const script: Firebot.CustomScript<Params> = {
@@ -257,10 +258,10 @@ const script: Firebot.CustomScript<Params> = {
       },
       sendAs: {
         type: "enum",
-        default: "Bot",
+        default: "bot",
         description: "Send the chat message as",
-        secondaryDescription: "'Bot' has no effect if no bot user is set up",
-        options: ["Streamer", "Bot"],
+        secondaryDescription: "'bot' has no effect if no bot user is set up",
+        options: ["streamer", "bot"],
       },
     };
   },
@@ -280,7 +281,7 @@ const script: Firebot.CustomScript<Params> = {
         response = await handleGoogle(
           logger,
           apiKey,
-          action as unknown as string,
+          action,
           text,
           target,
         );
@@ -289,7 +290,7 @@ const script: Firebot.CustomScript<Params> = {
         response = await handleDeepL(
           logger,
           apiKey,
-          action as unknown as string,
+          action,
           text,
           target,
         );
@@ -298,7 +299,7 @@ const script: Firebot.CustomScript<Params> = {
         response = await handleLibreTranslate(
           logger,
           apiKey,
-          action as unknown as string,
+          action,
           text,
           target,
         );
